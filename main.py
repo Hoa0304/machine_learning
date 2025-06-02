@@ -16,7 +16,6 @@ from pydantic import BaseModel
 from typing import Optional
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
-import json
 
 # Thiết lập logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -384,19 +383,6 @@ class HouseInput(BaseModel):
     balcony_direction: Optional[str] = None
     legal_documents: Optional[str] = None
 
-class House(BaseModel):
-    location: Optional[str] = None
-    type_of_house: Optional[str] = None
-    land_area: Optional[str] = None
-    bedrooms: Optional[str] = None
-    toilets: Optional[str] = None
-    total_floors: Optional[str] = None
-    main_door_direction: Optional[str] = None
-    balcony_direction: Optional[str] = None
-    legal_documents: Optional[str] = None
-
-class HistoryInput(BaseModel):
-    history: list
 
 @app.api_route("/predict", methods=["POST", "OPTIONS"])
 async def predict_price(house: HouseInput):
@@ -448,25 +434,6 @@ async def predict_price(house: HouseInput):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Lỗi: {str(e)}")
 
-@app.post("/save-history")
-async def save_history(data: HistoryInput):
-    try:
-        with open("prediction_history.json", "w", encoding="utf-8") as f:
-            json.dump(data.history, f, ensure_ascii=False, indent=2)
-        return {"message": "Lịch sử đã được lưu thành công"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi khi lưu lịch sử: {str(e)}")
-
-@app.get("/get-history")
-async def get_history():
-    try:
-        with open("prediction_history.json", "r", encoding="utf-8") as f:
-            history = json.load(f)
-        return history
-    except FileNotFoundError:
-        return []
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi khi đọc lịch sử: {str(e)}")
 
 # Khởi tạo mô hình khi server bắt đầu
 @app.on_event("startup")
