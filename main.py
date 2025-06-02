@@ -229,7 +229,7 @@ def initialize_data_and_model(file_path="real_estate_listings.csv"):
     plt.figure(figsize=(10, 5))
     sns.histplot(df['Price'].dropna(), bins=40)
     plt.title("Phân bố Giá Nhà (Logarit)")
-    plt.xlabel("Log(Giá) (VND)")
+    plt.xlabel("Giá (VND)")
     plt.ylabel("Số lượng")
     plt.savefig("price_distribution_log.png")
     plt.close()
@@ -252,7 +252,7 @@ def initialize_data_and_model(file_path="real_estate_listings.csv"):
 
     plt.figure(figsize=(8, 4))
     sns.scatterplot(x=df['Land Area'], y=df['Price'])
-    plt.title("Diện tích đất vs. Log(Giá)")
+    plt.title("Diện tích đất vs Giá")
     plt.savefig("land_area_vs_price_log.png")
     plt.close()
     logger.info("Đã tạo land_area_vs_price_log.png")
@@ -341,6 +341,15 @@ def initialize_data_and_model(file_path="real_estate_listings.csv"):
     grid_search = GridSearchCV(model, param_grid, cv=5, scoring='r2', n_jobs=-1)
     grid_search.fit(X_train, y_train)
     model = grid_search.best_estimator_
+    # Lấy kết quả GridSearchCV
+    cv_results = pd.DataFrame(grid_search.cv_results_)
+    # Chọn các cột quan trọng
+    cv_results = cv_results[['params', 'mean_test_score', 'std_test_score', 'rank_test_score']]
+    # Sắp xếp theo điểm số từ cao đến thấp
+    cv_results = cv_results.sort_values(by='mean_test_score', ascending=False)
+    # Lưu vào CSV
+    cv_results.to_csv("grid_search_results.csv", index=False)
+    logger.info("Đã lưu kết quả GridSearchCV vào grid_search_results.csv")
     logger.info(f"Tham số tốt nhất: {grid_search.best_params_}")
     logger.info(f"R² CV tốt nhất: {grid_search.best_score_:.4f}")
 
