@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dự đoán giá nhà</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.0/babel.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f3f4f6;
+    }
+    .container {
+      min-height: 100vh;
+      padding: 1rem;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .card {
+      background-color: #ffffff;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+    }
+    .title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #4b5563;
+      margin-bottom: 0.25rem;
+    }
+    .input, .select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-size: 1rem;
+    }
+    .input:focus, .select:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5);
+    }
+    .button {
+      width: 100%;
+      padding: 0.5rem 1rem;
+      background-color: #4f46e5;
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .button:hover {
+      background-color: #4338ca;
+    }
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .success-message {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: #d1fae5;
+      color: #065f46;
+      border-radius: 0.375rem;
+    }
+    .error-message {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: #fee2e2;
+      color: #991b1b;
+      border-radius: 0.375rem;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .sub-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .secondary-button {
+      padding: 0.5rem 1rem;
+      background-color: #2563eb;
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .secondary-button:hover {
+      background-color: #1d4ed8;
+    }
+    .delete-button {
+      padding: 0.25rem 0.5rem;
+      background-color: #dc2626;
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .delete-button:hover {
+      background-color: #b91c1c;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    .table {
+      width: 100%;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-collapse: collapse;
+    }
+    .table-header {
+      background-color: #f9fafb;
+    }
+    .table-header th {
+      padding: 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    .table-row:hover {
+      background-color: #f9fafb;
+    }
+    .table-cell {
+      padding: 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.875rem;
+      color: #4b5563;
+    }
+    .empty-message {
+      color: #6b7280;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem 0.5rem;
+      }
+      .card {
+        padding: 1rem;
+      }
+      .title {
+        font-size: 1.25rem;
+      }
+      .sub-title {
+        font-size: 1rem;
+      }
+      .form-group {
+        margin-bottom: 0.75rem;
+      }
+      .label {
+        font-size: 0.75rem;
+      }
+      .input, .select {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.875rem;
+      }
+      .button, .secondary-button, .delete-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+      }
+      .table-header th, .table-cell {
+        font-size: 0.75rem;
+        padding: 0.4rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .button-group {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .secondary-button {
+        flex: 1;
+        text-align: center;
+      }
+      .table-header th, .table-cell {
+        font-size: 0.65rem;
+        padding: 0.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-type="module">
+    const { useState, useEffect } = React;
+
+    const App = () => {
+      const [formData, setFormData] = useState({
+        location: '',
+        type_of_house: '',
+        land_area: '',
+        bedrooms: '',
+        toilets: '',
+        total_floors: '',
+        main_door_direction: '',
+        balcony_direction: '',
+        legal_documents: ''
+      });
+      const [predictedPrice, setPredictedPrice] = useState(null);
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [predictionHistory, setPredictionHistory] = useState([]);
+
+      // Đọc file prediction_history.json khi ứng dụng khởi động
+      const loadHistory = async () => {
+         try {
+           const response = await fetch('http://192.168.1.8:8000/get-history');
+           if (!response.ok) {
+             throw new Error('Không tìm thấy file prediction_history.json');
+           }
+           const data = await response.json();
+           setPredictionHistory(data);
+         } catch (err) {
+           console.warn('Không thể tải lịch sử dự đoán:', err.message);
+         }
+       };
+      useEffect(() => {
+       
+        loadHistory();
+      },[]);
+
+      // Xử lý thay đổi input
+      const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+      };
+
+      // Xử lý submit form
+      const handleSubmit = async (e) => {
+        e.preventDefault(); // Ngăn hành vi mặc định của form ngay đầu
+        console.log('Form submitted'); // Debug
+        
+        setError('');
+        setPredictedPrice(null);
+        setLoading(true);
+
+        // Kiểm tra dữ liệu đầu vào
+        if (!parseFloat(formData.land_area)) {
+          setError('Diện tích đất phải là số hợp lệ');
+          setLoading(false);
+          return;
+        }
+
+        try {
+          console.log('Sending request to API...'); // Debug
+          const response = await axios.post('http://192.168.1.8:8000/predict', {
+            location: formData.location || undefined,
+            type_of_house: formData.type_of_house || undefined,
+            land_area: formData.land_area || undefined,
+            bedrooms: formData.bedrooms || undefined,
+            toilets: formData.toilets || undefined,
+            total_floors: formData.total_floors || undefined,
+            main_door_direction: formData.main_door_direction || undefined,
+            balcony_direction: formData.balcony_direction || undefined,
+            legal_documents: formData.legal_documents || undefined
+          });
+
+          console.log('API response:', response.data); // Debug
+          const price = response.data.predicted_price_vnd;
+          setPredictedPrice(price);
+
+          const newPrediction = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleString('vi-VN'),
+            ...formData,
+            predictedPrice: price
+          };
+          const updatedHistory = [newPrediction, ...predictionHistory];
+          setPredictionHistory(updatedHistory);
+
+          // Gửi lịch sử đến backend để lưu vào file prediction_history.json
+          await axios.post('http://192.168.1.8:8000/save-history', {
+            history: updatedHistory
+          });
+        } catch (err) {
+          console.error('Error during prediction:', err); // Debug
+          setError(err.response?.data?.detail || 'Đã xảy ra lỗi khi dự đoán giá');
+          setPredictedPrice(null);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // Tải lịch sử dưới dạng JSON
+      const downloadHistory = () => {
+        if (predictionHistory.length === 0) {
+          alert('Không có lịch sử dự đoán để tải.');
+          return;
+        }
+        const dataStr = JSON.stringify(predictionHistory, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'prediction_history.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      };
+
+      // Xóa một dự đoán cụ thể
+      const deletePrediction = async (id) => {
+        const updatedHistory = predictionHistory.filter(item => item.id !== id);
+        setPredictionHistory(updatedHistory);
+        try {
+          await axios.post('http://192.168.1.8:8000/save-history', {
+            history: updatedHistory
+          });
+          alert('Đã xóa dự đoán.');
+        } catch (err) {
+          setError('Lỗi khi xóa dự đoán: ' + err.message);
+          setPredictionHistory(predictionHistory);
+        }
+      };
+
+      return (
+        <div className="container">
+          <div className="card">
+            <h2 className="title">Dự đoán giá nhà</h2>
+            <form onSubmit={handleSubmit} className="form-group">
+              <div className="form-group">
+                <label className="label">Vị trí</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="Ví dụ: Phường 15, Quận Bình Thạnh"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">Loại nhà</label>
+                <select
+                  name="type_of_house"
+                  value={formData.type_of_house}
+                  onChange={handleChange}
+                  className="select"
+                  required
+                >
+                  <option value="">Chọn loại nhà</option>
+                  <option value="Nhà hẻm, ngõ">Nhà hẻm, ngõ</option>
+                  <option value="Nhà mặt tiền">Nhà mặt tiền</option>
+                  <option value="Biệt thự, Villa">Biệt thự, Villa</option>
+                  <option value="Đất thổ cư">Đất thổ cư</option>
+                  <option value="Nhà phố liền kề">Nhà phố liền kề</option>
+                  <option value="Căn hộ chung cư">Căn hộ chung cư</option>
+                  <option value="Khách sạn, nhà hàng">Khách sạn, nhà hàng</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="label">Diện tích đất (m²)</label>
+                <input
+                  type="text"
+                  name="land_area"
+                  value={formData.land_area}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="Ví dụ: 36 m²"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">Số phòng ngủ</label>
+                <input
+                  type="number"
+                  name="bedrooms"
+                  value={formData.bedrooms}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="Ví dụ: 4"
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">Số nhà vệ sinh</label>
+                <input
+                  type="number"
+                  name="toilets"
+                  value={formData.toilets}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="Ví dụ: 3"
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">Số tầng</label>
+                <input
+                  type="number"
+                  name="total_floors"
+                  value={formData.total_floors}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="Ví dụ: 2"
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">Hướng cửa chính</label>
+                <select
+                  name="main_door_direction"
+                  value={formData.main_door_direction}
+                  onChange={handleChange}
+                  className="select"
+                >
+                  <option value="">Chọn hướng</option>
+                  <option value="Bắc">Bắc</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Tây">Tây</option>
+                  <option value="Tây Bắc">Tây Bắc</option>
+                  <option value="Tây Nam">Tây Nam</option>
+                  <option value="Đông">Đông</option>
+                  <option value="Đông Bắc">Đông Bắc</option>
+                  <option value="Đông Nam">Đông Nam</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="label">Hướng ban công</label>
+                <select
+                  name="balcony_direction"
+                  value={formData.balcony_direction}
+                  onChange={handleChange}
+                  className="select"
+                >
+                  <option value="">Chọn hướng</option>
+                  <option value="Bắc">Bắc</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Tây">Tây</option>
+                  <option value="Tây Bắc">Tây Bắc</option>
+                  <option value="Tây Nam">Tây Nam</option>
+                  <option value="Đông">Đông</option>
+                  <option value="Đông Bắc">Đông Bắc</option>
+                  <option value="Đông Nam">Đông Nam</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="label">Giấy tờ pháp lý</label>
+                <select
+                  name="legal_documents"
+                  value={formData.legal_documents}
+                  onChange={handleChange}
+                  className="select"
+                >
+                  <option value="">Chọn loại giấy tờ</option>
+                  <option value="Giấy tờ hợp lệ">Giấy tờ hợp lệ</option>
+                  <option value="Giấy tờ khác">Giấy tờ khác</option>
+                  <option value="Hợp đồng mua bán">Hợp đồng mua bán</option>
+                  <option value="Sổ hồng">Sổ hồng</option>
+                  <option value="Sổ đỏ">Sổ đỏ</option>
+                  <option value="Đang chờ sổ">Đang chờ sổ</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="button"
+              >
+                {loading ? 'Đang dự đoán...' : 'Dự đoán giá'}
+              </button>
+            </form>
+            {predictedPrice && (
+              <div className="success-message">
+                Giá dự đoán: <span style={{ fontWeight: 'bold' }}>{predictedPrice}</span>
+              </div>
+            )}
+            {error && (
+              <div className="error-message">
+                Lỗi: {error}
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <div className="header">
+              <h2 className="sub-title">Lịch sử dự đoán</h2>
+              <div className="button-group">
+                <button
+                  onClick={downloadHistory}
+                  className="secondary-button"
+                >
+                  Tải lịch sử (JSON)
+                </button>
+              </div>
+            </div>
+            {predictionHistory.length > 0 ? (
+              <div className="table-container">
+                <table className="table">
+                  <thead className="table-header">
+                    <tr>
+                      <th>Thời gian</th>
+                      <th>Vị trí</th>
+                      <th>Loại nhà</th>
+                      <th>Diện tích</th>
+                      <th>Giá dự đoán</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {predictionHistory.map((item) => (
+                      <tr key={item.id} className="table-row">
+                        <td className="table-cell">{item.timestamp}</td>
+                        <td className="table-cell">{item.location || 'N/A'}</td>
+                        <td className="table-cell">{item.type_of_house || 'N/A'}</td>
+                        <td className="table-cell">{item.land_area || 'N/A'}</td>
+                        <td className="table-cell">{item.predictedPrice}</td>
+                        <td className="table-cell">
+                          <button
+                            onClick={() => deletePrediction(item.id)}
+                            className="delete-button"
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="empty-message">Chưa có dự đoán nào.</p>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
